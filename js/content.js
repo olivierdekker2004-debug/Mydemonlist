@@ -1,37 +1,54 @@
+
 import { round, score } from './score.js';
 
 /**
- * Path to directory containing `_list.json` and all levels
+ * Path to directory containing _list.json and all levels
  */
-const dir = '/data';
+const dir = './data';
 
 export async function fetchList() {
-    const listResult = await fetch(`${dir}/_list.json`);
     try {
+        const listResult = await fetch(`${dir}/_list.json`);
+
+        if (!listResult.ok) {
+            throw new Error(`HTTP ${listResult.status}`);
+        }
+
         const list = await listResult.json();
+
         return await Promise.all(
             list.map(async (path, rank) => {
                 const levelResult = await fetch(`${dir}/${path}.json`);
+
                 try {
+                    if (!levelResult.ok) {
+                        throw new Error(`HTTP ${levelResult.status}`);
+                    }
+
                     const level = await levelResult.json();
+
                     return [
                         {
                             ...level,
                             path,
-                            records: level.records.sort(
-                                (a, b) => b.percent - a.percent,
+                            records: (level.records || []).sort(
+                                (a, b) => b.percent - a.percent
                             ),
                         },
                         null,
                     ];
-                } catch {
-                    console.error(`Failed to load level #${rank + 1} ${path}.`);
+                } catch (error) {
+                    console.error(
+                        `Failed to load level #${rank + 1} ${path}.`,
+                        error
+                    );
+
                     return [null, path];
                 }
-            }),
+            })
         );
-    } catch {
-        console.error(`Failed to load list.`);
+    } catch (error) {
+        console.error('Failed to load list.', error);
         return null;
     }
 }
@@ -39,9 +56,14 @@ export async function fetchList() {
 export async function fetchEditors() {
     try {
         const editorsResults = await fetch(`${dir}/_editors.json`);
-        const editors = await editorsResults.json();
-        return editors;
-    } catch {
+
+        if (!editorsResults.ok) {
+            throw new Error(`HTTP ${editorsResults.status}`);
+        }
+
+        return await editorsResults.json();
+    } catch (error) {
+        console.error('Failed to load editors.', error);
         return null;
     }
 }
@@ -49,24 +71,32 @@ export async function fetchEditors() {
 export async function fetchLeaderboard() {
     const list = await fetchList();
 
+    if (!list) {
+        return [[], ['Failed to load list']];
+    }
+
     const scoreMap = {};
     const errs = [];
+
     list.forEach(([level, err], rank) => {
-        if (err) {
+        if (err || !level) {
             errs.push(err);
             return;
         }
 
         // Verification
         const verifier = Object.keys(scoreMap).find(
-            (u) => u.toLowerCase() === level.verifier.toLowerCase(),
+            (u) => u.toLowerCase() === level.verifier.toLowerCase()
         ) || level.verifier;
+
         scoreMap[verifier] ??= {
             verified: [],
             completed: [],
             progressed: [],
         };
+
         const { verified } = scoreMap[verifier];
+
         verified.push({
             rank: rank + 1,
             level: level.name,
@@ -77,14 +107,17 @@ export async function fetchLeaderboard() {
         // Records
         level.records.forEach((record) => {
             const user = Object.keys(scoreMap).find(
-                (u) => u.toLowerCase() === record.user.toLowerCase(),
+                (u) => u.toLowerCase() === record.user.toLowerCase()
             ) || record.user;
+
             scoreMap[user] ??= {
                 verified: [],
                 completed: [],
                 progressed: [],
             };
+
             const { completed, progressed } = scoreMap[user];
+
             if (record.percent === 100) {
                 completed.push({
                     rank: rank + 1,
@@ -105,9 +138,10 @@ export async function fetchLeaderboard() {
         });
     });
 
-    // Wrap in extra Object containing the user and total score
+    // Calculate total scores
     const res = Object.entries(scoreMap).map(([user, scores]) => {
         const { verified, completed, progressed } = scores;
+
         const total = [verified, completed, progressed]
             .flat()
             .reduce((prev, cur) => prev + cur.score, 0);
