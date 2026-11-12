@@ -6,10 +6,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>The Clutterfunk Demonlist</title>
 
-        <!-- Website icon -->
         <link rel="icon" href="./list_icon.png" />
 
-        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
@@ -17,7 +15,6 @@
             rel="stylesheet"
         />
 
-        <!-- CSS -->
         <link rel="stylesheet" href="./css/reset.css" />
         <link rel="stylesheet" href="./css/typography.css" />
         <link rel="stylesheet" href="./css/main.css" />
@@ -28,11 +25,9 @@
         <link rel="stylesheet" href="./css/components/btn.css" />
         <link rel="stylesheet" href="./css/components/tabs.css" />
 
-        <!-- Vue -->
         <script src="https://unpkg.com/vue@3.2.31/dist/vue.global.js"></script>
         <script src="https://unpkg.com/vue-router@4.0.14/dist/vue-router.global.prod.js"></script>
 
-        <!-- Main JavaScript -->
         <script type="module" src="./js/main.js"></script>
     </head>
 
@@ -57,7 +52,13 @@
                 </router-link>
 
                 <div class="nav__actions">
-                    <!-- Dark mode -->
+                    <router-link
+                        class="nav__tab"
+                        to="/login"
+                    >
+                        <span class="type-label-lg">Login</span>
+                    </router-link>
+
                     <button
                         class="nav__icon"
                         @click.prevent="store.toggleDark()"
@@ -68,12 +69,10 @@
                         />
                     </button>
 
-                    <!-- Discord server -->
                     <a class="nav__icon" href="#">
                         <img src="./assets/discord.svg" alt="Discord Logo" />
                     </a>
 
-                    <!-- Submit record -->
                     <a
                         class="nav__cta type-label-lg"
                         href="#"
